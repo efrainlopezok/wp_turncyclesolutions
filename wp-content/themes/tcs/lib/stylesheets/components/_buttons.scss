@@ -1,0 +1,70 @@
+.base-button {
+    min-width: 310px;
+    min-height: 60px;
+    border-radius: 0;
+    line-height: 3rem;
+    background-color: #000;
+    color: #fff;
+    text-transform: uppercase;
+    font-family: $font-family-second;
+    font-size: 1rem;
+    font-weight: $font-weight-black;
+    display: inline-block;
+    text-align: center;
+    padding: 7px 25px;
+    letter-spacing: 1px;
+    position: relative;
+    transition: all .2s ease-in-out;
+    @include breakpoint('small') {
+        min-width: 170px;
+        min-height: 40px;
+        line-height: 2.5rem;
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+    i {
+        // border: 2px solid;
+        border-radius: 100%;
+        line-height: 1rem;
+        width: 1.27rem;
+        height: 1.27rem;
+        margin-left: 5px;
+        text-align: center;
+        &:before {
+            position: relative;
+            left: 1px;
+        }
+    }
+    &:hover {
+        transition: all .2s ease-in-out;
+        color: #fff;
+    }
+    &.color-blue {
+        @include horizontal-gradient(rgba(91, 171, 224, 1), rgba(44, 129, 185, 1));
+        &:hover {
+            @include horizontal-gradient(rgba(44, 129, 185, 1), rgba(44, 129, 185, 1));
+        }
+    }
+    &.color-red {
+        @include horizontal-gradient(rgba(255, 90, 84, 1), rgba(232, 59, 62, 1));
+        &:hover {
+            @include horizontal-gradient( rgba(232, 59, 62, 1), rgba(232, 59, 62, 1));
+        }
+    }
+    &.color-green {
+        // @include horizontal-gradient(rgba(28, 186, 154, 1), rgba(22, 161, 136, 1));
+        background-color: #34b048;
+        &:hover {
+            // @include horizontal-gradient(rgba(22, 161, 136, 1), rgba(22, 161, 136, 1));
+            background-color: #34b048;
+        }
+    }
+    &.color-transparent {
+        background: transparent;
+        border: 2px solid white;
+        &:hover {
+            background: white;
+            color: $color-font-base;
+        }
+    }
+}

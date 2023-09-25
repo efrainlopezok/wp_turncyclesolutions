@@ -1,0 +1,351 @@
+<?php
+
+
+// Register and load the widget
+function ndss_coupon_widget() {
+    register_widget( 'ndss_widget' );
+}
+add_action( 'widgets_init', 'ndss_coupon_widget' );
+ 
+// Creating the widget 
+class ndss_widget extends WP_Widget {
+ 
+function __construct() {
+parent::__construct(
+ 
+// Base ID of your widget
+'ndss_widget', 
+ 
+// Widget name will appear in UI
+__('NDSS Coupon Widget', 'ndss_widget_domain'), 
+ 
+// Widget description
+array( 'description' => __( 'NDSS Coupon Widget to select and show a PopUp', 'ndss_widget_domain' ), ) 
+);
+}
+ 
+// Creating widget front-end
+
+public function widget( $args, $instance ) {
+$title = apply_filters( 'widget_title', $instance['title'] );
+$class_widget = $instance['class_widget'];
+// $image_coupon = $instance['image_coupon'];
+$terms_page = $instance['terms_page'];
+$terms_text = $instance['terms_text'];
+$terms_content = $instance['terms_content'];
+$terms_form = $instance['terms_form'];
+
+$image = get_field('get_your_image', 'widget_' . $args['widget_id']);
+
+
+/**
+     * Get information from url
+     */
+    global $wpdb; 
+
+    $url = $_SERVER['REQUEST_URI'];
+    $custom_slug = explode('/', $url);
+    $location_slug = $custom_slug[count($custom_slug)-3].'/'.$custom_slug[count($custom_slug)-2];
+    
+    $id = getLocationBySlug($location_slug);
+    if(!$id){
+        $id = getLocationBySlug($location_slug.'/'); $id_single = getLocationBySlug($location_slug.'/');
+    }
+    // $id = '6657';
+    if(!$id){
+        $id = '6657';
+    }
+    
+    if ($id) {
+        $table_name = $wpdb->prefix . "location_information";    
+        $location_query = "SELECT * FROM $table_name WHERE SiteID=%d LIMIT 1";
+        $location_details = $wpdb->get_results($wpdb->prepare($location_query, $id));
+    }
+
+    if(!$id){
+        $location_id = $_GET['location'];
+        $id = $_GET['location'];
+        $table_name = $wpdb->prefix . "location_information";
+        $location_query = "SELECT * FROM $table_name WHERE SiteID=%d LIMIT 1";
+        $location_details = $wpdb->get_results($wpdb->prepare($location_query, $location_id));  
+    }
+
+    if (isset($_POST['lead'])) {
+        // $res = coupon_lead($_POST,$location_id);
+        // if($res){
+                $to = trim($_POST['lead_email']);
+                      
+                $email_data['from_email'] = $location_details[0]->sEmailAddress;
+                $email_data['from_name'] =  "NextDoor Storage - {$location_details[0]->sSiteCity}";
+                $email_data['subject'] =  "Coupon code information  - {$location_details[0]->sSiteCity}";
+                $email_data['to'] =  array(
+                                        // array('email' => $to, 'type' =>'to' ),
+                                        // array('email' => $location_details[0]->sEmailAddress, 'type' => 'cc' ), 
+                                        // array('email' => 'joan@nextdoorselfstorage.com', 'type' => 'bcc' ),
+                                        // array('email' => 'jdmurph@hotmail.com', 'type' => 'bcc' ),
+                                        // array('email' => 'phil@nextdoorselfstorage.com', 'type' => 'bcc' ),
+                                        // array('email' => 'devteam6@codal.com', 'type' => 'bcc' )
+                                        array('email' => 'sjariwala@codal.com', 'type' =>'to' )
+                                     );
+                                     
+            //$facility_permalink =  get_permalink(91).'?location='.$location_details[0]->SiteID;
+            //$facility_url = "<a href='$facility_permalink'>$facility_permalink</a>"; 
+            
+            $slug = getSlugBySiteID($location_details[0]->SiteID);
+            $facility_permalink = home_url().'/'.$slug;
+            $facility_url = "<a href='$facility_permalink'>$facility_permalink</a>"; 
+            
+            // $coupon_content = ot_get_option('coupon_content');
+            $img = get_stylesheet_directory_uri().'/assets/images/banner.jpg';
+
+            //  $email_data['message'] =  '
+            $ndssbody =  '
+                    <html>
+                    
+                    <head>
+                    
+                      <title></title>
+                    
+                      <style type="text/css" media="all">
+                    
+                     .wrapper { margin:0px auto; border:1px solid #eee; width:700px;}
+                    
+                    .color { width:100%; height:40px; background:#d70c1a; display:block;}
+                    
+                    .body { color: #505050; padding:15px; font-family:Arial, Helvetica, sans-serif; font-size:14px; line-height:20px;}
+                    
+                    .body a { color:#1a56c2;}
+                    
+                     </style>
+                    
+                    </head>
+                    
+                    <body>
+                    
+                    <div class="wrapper"> 
+                    
+                    <div class="banner"> <img src=' .$img .' /> </div>
+                    
+                    <div class="color"> </div>
+                    
+                    <div class="body">
+                    
+                      <p>Thank you for your interest in Next Door Self Storage.</p>
+                      
+                      
+                      <h4>User Information</h4>
+             
+                      <strong>Name:</strong>' .$_POST['lead_name'] .'<br>
+            
+                      <strong>Email Adress:</strong><a href=>'.$_POST['lead_email'] .'</a><br>
+            
+                      <strong>Phone:</strong><a href=>'.$_POST['lead_phone'] .'</a><br>
+                      
+                      
+                      
+                       <h4>Facility Information</h4>
+                    
+                      <strong>Faciliy Name:Next Door Self Storage-</strong>'.$location_details[0]->sSiteCity   .'<br>
+                      
+                      <strong>Faciliy Address:</strong>'.$location_details[0]->sSiteAddr1   .'<br>
+                    
+                      <strong>Faciliy Phone:</strong><a href=>'.$location_details[0]->sSitePhone   .'<br></a>
+                    
+                      
+                    
+                      <b>Faciliy Url:</b>'.$facility_url.'
+                    
+                     <p>'.$coupon_content.'</p>
+                      </div>
+                    
+                    </div>
+                    
+                    </body>
+                    
+                    </html>                     
+                    ';
+                
+            // $return = sendSiteRelatedEmail($email_data);         
+            // if($return){
+            //     $success='<p style="background:green; 
+            //     color:#fff; padding:5px 10px;">Coupon information sent. Check your email.</p>';
+            // }else{
+            //     $errors = "Error: Email not sent. Please try after sometime";
+            // }
+        // }else{
+        //     $errors = "API Error: Coupon cannot be sent now"; 
+        // }
+        // echo $return;
+        // echo $success;
+        // echo 'Lorem Ipsum';
+        
+        //$ndssheaders[] = 'From: NextDoor Storage - '.$location_details[0]->sSiteCity.' <'.$location_details[0]->sEmailAddress.'>';
+        $headers = array('Content-Type: text/html; charset=UTF-8');
+        // $headers[] = 'Cc: John Q Codex <jqc@wordpress.org>';
+        // $headers[] = 'Cc: iluvwp@wordpress.org'; // note you can just use a simple email address
+        $ndsssubject =  "Coupon code information  - ".$location_details[0]->sSiteCity;
+        wp_mail( $to, $ndsssubject, $ndssbody, $headers );
+        echo '<script>';
+            echo 'jQuery(document).ready(function() {
+                jQuery.magnificPopup.open({
+                    items: {
+                      src: "#sent"
+                    },
+                    type: "inline"
+                  });
+              });';
+        echo '</script>';
+    }
+
+    /**
+     * Default Coupon Value
+     */
+    if(!$title)
+        $title =  '15% OFF THIS MONTH & $1 MOVE IN';
+    if(!$terms_page)
+        $terms_page =  '/terms';
+    if(!$terms_text)
+        $terms_text =  '* Terms & Conditions Apply';
+    if(!$terms_content)
+        $terms_content =  '*Coupon is for selected unit and must be presented at time of first enquiry and cannot be combined with any other discounts including reservation. The coupon is for new customers only and Expires 30 days from print date.';
+
+echo '<section class="'.$class_widget.'">';
+    echo '<div class="coupon">';
+        echo '<div class="coupon-image" style="background-image: url('.$image.')">';
+            echo '<h2>'.$title.'</h2>';
+        echo '</div>';
+        echo '<div class="coupon-apply">';
+            echo '<h2><a href="#coupon" class="open-popup-link">GET YOUR COUPON NOW!</a></h2>';
+        echo '</div>';
+    echo '</div>';
+    echo '<a class="term-link" href="'.$terms_page.'"><p class="txt-small txt-small-clone">'.$terms_text.'</p></a>';
+echo '</section>';
+
+echo '
+    <!-- PopUp Coupon -->
+    <div id="coupon" class="white-popup mfp-hide">
+        <div class="one-half first">
+            <div class="coupon">
+                <div class="coupon-image" style="background-image: url('.$image.')">
+                    <h2>'.$title.'</h2>
+                </div>
+            </div>
+            <a href="'.$terms_page.'"><p class="txt-small">'.$terms_text.'</p></a>
+            <p class="txt-small text-left no-mobile">'.$terms_content.'</p>
+        </div>
+        <div class="one-half">
+            <h4 class="no-mobile">Next Door Self Storage</h4>
+            <h2 class="no-mobile">'.$location_details[0]->sSiteCity.', '.$location_details[0]->sSiteRegion.'</h2>
+            <div class="contact-form bg-form-gray">
+                <h2>Get the coupon for this location</h2>
+                <form action="" method="post">
+                    <div class="group">
+                        <label for="fullname">Full Name<span>*</span></label>
+                        <input type="text" placeholder="Your Full Name" id="fullname" name="lead_name" class="required" />
+                        <span class="error">Please enter your Full Name</span>
+                    </div>
+                    <div class="group">
+                        <label for="email_address">Email Address<span>*</span></label>
+                        <input type="email" placeholder="Your Email Address" id="email_address" name="lead_email" class="required" />
+                        <span class="error">Please enter your Email</span>
+                    </div>
+                    <div class="group">
+                        <label for="phone">Phone Number<span>*</span></label>
+                        <input type="text" placeholder="8-12 numbers" id="phone" name="lead_phone" class="required" />
+                        <span class="error">Please enter your Phone Number</span>
+                    </div>
+                    <p class="form-submit">
+                        <button type="submit" class="btn btn-blue btn-little" name="lead">Email Coupon</button>
+                    </p>
+                </form>
+            </div>
+            <p class="txt-small text-left mobile">'.$terms_content.'</p>
+        </div>
+    </div>
+    <!-- /PopUp Coupon -->
+';
+echo '
+    <!-- PopUp Sent -->
+    <div id="sent" class="white-popup white-medium mfp-hide">
+        <div class="text-center">
+            <h2 class="title-sent">Coupon Sent!</h2>
+            <p class="content-sent">Please check your email. Your coupon has been sent to <a href="mailto:'.$_POST['lead_email'] .'">'.$_POST['lead_email'] .'</a></p>
+            <p class="form-submit">
+                <button type="submit" class="mfp-close btn btn-blue btn-little">OK</button>
+            </p>
+        </div>
+    </div>
+    <!-- /PopUp Sent -->
+';
+// before and after widget arguments are defined by themes
+// echo $args['before_widget'];
+// if ( ! empty( $title ) )
+// echo $args['before_title'] . $title . $args['after_title'];
+ 
+// // This is where you run the code and display the output
+// echo __( 'Hello, World!', 'ndss_widget_domain' );
+// echo $args['after_widget'];
+}
+         
+// Widget Backend 
+public function form( $instance ) {
+if ( isset( $instance[ 'title' ] ) ) {$title = $instance[ 'title' ];}
+else {$title = __( '', 'ndss_widget_domain' );}
+if ( isset( $instance[ 'class_widget' ] ) ) {$class_widget = $instance[ 'class_widget' ];}
+else {$class_widget = __( '', 'ndss_widget_domain' );}
+// if ( isset( $instance[ 'image_coupon' ] ) ) {$image_coupon = $instance[ 'image_coupon' ];}
+// else {$image_coupon = __( '', 'ndss_widget_domain' );}
+if ( isset( $instance[ 'terms_page' ] ) ) {$terms_page = $instance[ 'terms_page' ];}
+else {$terms_page = __( '', 'ndss_widget_domain' );}
+if ( isset( $instance[ 'terms_text' ] ) ) {$terms_text = $instance[ 'terms_text' ];}
+else {$terms_text = __( '', 'ndss_widget_domain' );}
+if ( isset( $instance[ 'terms_content' ] ) ) {$terms_content = $instance[ 'terms_content' ];}
+else {$terms_content = __( '', 'ndss_widget_domain' );}
+if ( isset( $instance[ 'terms_form' ] ) ) {$terms_form = $instance[ 'terms_form' ];}
+else {$terms_form = __( '', 'ndss_widget_domain' );}
+// Widget admin form
+?>
+<p>
+<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title of Coupon:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" placeholder="Your Title" />
+</p>
+<p>
+<label for="<?php echo $this->get_field_id( 'class_widget' ); ?>"><?php _e( 'Class:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'class_widget' ); ?>" name="<?php echo $this->get_field_name( 'class_widget' ); ?>" type="text" value="<?php echo esc_attr( $class_widget ); ?>" placeholder="Widget Class" />
+</p>
+<!-- <p>
+<label for="<?php echo $this->get_field_id( 'image_coupon' ); ?>"><?php _e( 'Image Coupon:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'image_coupon' ); ?>" name="<?php echo $this->get_field_name( 'image_coupon' ); ?>" type="text" value="<?php echo esc_attr( $image_coupon ); ?>" placeholder="The Image for your Coupon" />
+</p> -->
+<p>
+<label for="<?php echo $this->get_field_id( 'terms_page' ); ?>"><?php _e( 'Terms Page:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'terms_page' ); ?>" name="<?php echo $this->get_field_name( 'terms_page' ); ?>" type="text" value="<?php echo esc_attr( $terms_page ); ?>" placeholder="The Link of your Terms" />
+</p>
+<p>
+<label for="<?php echo $this->get_field_id( 'terms_text' ); ?>"><?php _e( 'Terms Label:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'terms_text' ); ?>" name="<?php echo $this->get_field_name( 'terms_text' ); ?>" type="text" value="<?php echo esc_attr( $terms_text ); ?>" placeholder="Text of your Link terms" />
+</p>
+<p>
+<label for="<?php echo $this->get_field_id( 'terms_content' ); ?>"><?php _e( 'Terms Description:' ); ?></label> 
+<textarea class="widefat" id="<?php echo $this->get_field_id( 'terms_content' ); ?>" name="<?php echo $this->get_field_name( 'terms_content' ); ?>" ><?php echo esc_attr( $terms_content ); ?></textarea>
+</p>
+<p>
+<label for="<?php echo $this->get_field_id( 'terms_form' ); ?>"><?php _e( 'Terms Form:' ); ?></label> 
+<input class="widefat" id="<?php echo $this->get_field_id( 'terms_form' ); ?>" name="<?php echo $this->get_field_name( 'terms_form' ); ?>" type="text" value="<?php echo esc_attr( $terms_form ); ?>" placeholder="The form of your Coupon" />
+</p>
+<?php 
+}
+     
+// Updating widget replacing old instances with new
+public function update( $new_instance, $old_instance ) {
+$instance = array();
+$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
+$instance['class_widget'] = ( ! empty( $new_instance['class_widget'] ) ) ? strip_tags( $new_instance['class_widget'] ) : '';
+// $instance['image_coupon'] = ( ! empty( $new_instance['image_coupon'] ) ) ? strip_tags( $new_instance['image_coupon'] ) : '';
+$instance['terms_page'] = ( ! empty( $new_instance['terms_page'] ) ) ? strip_tags( $new_instance['terms_page'] ) : '';
+$instance['terms_text'] = ( ! empty( $new_instance['terms_text'] ) ) ? strip_tags( $new_instance['terms_text'] ) : '';
+$instance['terms_content'] = ( ! empty( $new_instance['terms_content'] ) ) ? strip_tags( $new_instance['terms_content'] ) : '';
+$instance['terms_form'] = ( ! empty( $new_instance['terms_form'] ) ) ? strip_tags( $new_instance['terms_form'] ) : '';
+return $instance;
+}
+} // Class ndss_widget ends here
